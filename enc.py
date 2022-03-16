@@ -29,7 +29,7 @@ def encrypt(message, key, probRandom):
             ret += random.choice(ALPH_LIST)
         else:
             ret += key[message[msgIdx]]
-            msgIdx += 1
+        msgIdx += 1
     return ret
 
 if __name__=="__main__":
