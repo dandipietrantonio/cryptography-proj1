@@ -127,7 +127,7 @@ int main() {
             decodeMap.insert(pair<char, char>((*inputSortedChar)[j], (*pTextSortedChars[i])[j]));
         }
 
-        // Given decodeMap, decode ciphertext and find the plaintext with lowest LDistance
+        // Given decodeMap, decode ciphertext and find the LDistance decrypted text and corresponding plaintext 
         char decryptedText [input.length()];
         for (int j=0; j<input.length(); j++) {
             decryptedText[j] = decodeMap[input[j]];
