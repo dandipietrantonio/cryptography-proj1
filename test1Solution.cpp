@@ -72,31 +72,7 @@ int main() {
     unordered_map<char, int> inputFreqMap;
     initializeMap(&inputFreqMap);
 
-    // Initialize an unordered map for plaintexts
-    unordered_map<int, string> pTextMap;
-    unordered_map<char, int> pTextFreqMap;
-    initializeMap(&pTextFreqMap);
-
-    // Get the plaintext from files
-    ifstream plainTFile("dictionary_1.txt");
-    string line;
-    string aggregratedPlainText;
-    int currInd = 0;
-    while (getline(plainTFile, line)){
-        if (line.length() == 0) continue;
-        if (line.substr(0, 4) == "Test") continue;
-        if (line.substr(0, 21) == "Candidate Plaintext #") {
-            currInd = atoi(line.substr(21, 1).c_str()); 
-            continue;
-        }
-        pTextMap[currInd] = line;
-        aggregratedPlainText += line;
-    } 
-
-    // Get the aggregrated character distribution from plaintexts
-    getCharFreq(pTextFreqMap, aggregratedPlainText);
-    vector<char>* pTextSortedChar = sortFreqMap(pTextFreqMap);
-
+    
     // // Get the input from stdin
     // string input;
     // cout << "Input string: ";
@@ -106,28 +82,69 @@ int main() {
     ifstream inFile("encrypted");
     string input;
     getline(inFile, input);
-    cout << input << endl;
+    // cout << input << endl;
 
 
     getCharFreq(inputFreqMap, input);
     vector<char>* inputSortedChar = sortFreqMap(inputFreqMap);
 
-    // Map characters according to distribution
-    unordered_map<char, char> decodeMap;
-    for (int i=0; i<inputSortedChar->size(); i++) {
-        decodeMap.insert(pair<char, char>((*inputSortedChar)[i], (*pTextSortedChar)[i]));
+    // Initialize an unordered map for plaintexts
+    vector<string> pTextMap;
+
+    // Get the plaintext from file "dictionary_1.txt"
+    ifstream plainTFile("dictionary_1.txt");
+    string line;
+    string aggregratedPlainText;
+    while (getline(plainTFile, line)){
+        if (line.length() == 0) continue;
+        if (line.substr(0, 4) == "Test") continue;
+        if (line.substr(0, 21) == "Candidate Plaintext #") continue;
+        pTextMap.push_back(line);
+        aggregratedPlainText += line;
+    } 
+
+    // The accuracy of using aggregrated character distribution is not very high, delete before submission
+    // // Get the aggregrated character distribution from plaintexts
+    // getCharFreq(pTextFreqMap, aggregratedPlainText);
+    // vector<char>* pTextSortedChar = sortFreqMap(pTextFreqMap);
+
+    // Get the character distribution of all plaintexts separately
+    vector<vector<char>*> pTextSortedChars;
+    for (string item : pTextMap) {
+        unordered_map<char, int> pTextFreqMap;
+        initializeMap(&pTextFreqMap);
+        getCharFreq(pTextFreqMap, item);
+        vector<char>* pTextSortedChar = sortFreqMap(pTextFreqMap);
+        pTextSortedChars.push_back(pTextSortedChar);
     }
 
-    // Given decodeMap, decode ciphertext and find the plaintext with lowest LDistance
-    char decryptedText [input.length()];
-    for (int i=0; i<input.length(); i++) {
-        decryptedText[i] = decodeMap[input[i]];
+    // Create a vector storing the distance between decrypted text and each plaintext
+    vector<int> decryptDistances;
+    for (int i=0; i<pTextSortedChars.size(); i++) {
+        // Map characters according to distribution
+        unordered_map<char, char> decodeMap;
+        for (int j=0; j<inputSortedChar->size(); j++) {
+            decodeMap.insert(pair<char, char>((*inputSortedChar)[j], (*pTextSortedChars[i])[j]));
+        }
+
+        // Given decodeMap, decode ciphertext and find the plaintext with lowest LDistance
+        char decryptedText [input.length()];
+        for (int j=0; j<input.length(); j++) {
+            decryptedText[j] = decodeMap[input[j]];
+        }
+        int currDistance = LDistance(pTextMap[i], decryptedText);
+
+        // Store the result
+        decryptDistances.push_back(currDistance);
+
+        // cout << decryptedText << endl;
+        
+        // Store the corresponding distance
+        // cout << LDistance(pTextMap[i], decryptedText) << endl;
     }
 
-    // cout << decryptedText << endl;
-    
-    // For now, print distance of each plaintext, the lowest one would be the predicted original text
-    for (auto& it : pTextMap){
-        cout << LDistance(it.second, decryptedText) << endl;
-    }
+    // Find the plaintext id with minimum distance to corresponding decrypted text
+    int guessedPlainTextId = distance(begin(decryptDistances), min_element(begin(decryptDistances), end(decryptDistances)));
+    cout << "My plaintext guess is Candidate Plaintext #"<< guessedPlainTextId + 1 << endl;
+    cout << pTextMap[guessedPlainTextId] << endl;
 }

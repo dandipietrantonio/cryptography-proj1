@@ -48,7 +48,7 @@ if __name__=="__main__":
     plaintexts.append(
     "ovulatory geriatric hijack nonintoxicants prophylactic nonprotective skyhook warehouser paganized brigading european sassier antipasti tallyho warmer portables selling scheming amirate flanker photosensitizer multistage utile paralyzes indexer backrests tarmac doles siphoned casavas mudslinging nonverbal weevil arbitral painted vespertine plexiglass tanker seaworthiness uninterested anathematizing conduces terbiums wheelbarrow kabalas stagnation briskets counterclockwise hearthsides spuriously s"
     )
-    m = int(input("Enter which plaintext you would like to encrypt: "))
+    m = int(input("Enter which plaintext you would like to encrypt (1-5): "))
     p = float(input("Enter the prob of a random char (0-1): "))
     with open('encrypted', 'w') as f:
-        f.write(encrypt(plaintexts[m], getKey(), p))
+        f.write(encrypt(plaintexts[m-1], getKey(), p))
