@@ -137,10 +137,10 @@ int main() {
         // Store the result
         decryptDistances.push_back(currDistance);
 
-        // cout << decryptedText << endl;
+        // cout << string(decryptedText).length() << endl;
         
         // Store the corresponding distance
-        // cout << LDistance(pTextMap[i], decryptedText) << endl;
+        cout << LDistance(pTextMap[i], decryptedText) << endl;
     }
 
     // Find the plaintext id with minimum distance to corresponding decrypted text

@@ -1,6 +1,32 @@
+from hashlib import new
 import random
 
 ALPH_LIST = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", " "]
+
+def getVocabularies():
+    vocabularies = []
+    with open('dictionary_2.txt') as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.strip()
+            if len(line) == 0:
+                continue
+            if line[:4] == "Test":
+                continue
+            vocabularies.append(line)
+    return vocabularies
+
+def generateLine(vocabularies, N):
+    ret = ""
+    while len(ret) < N:
+        new_word = vocabularies[random.randint(0, len(vocabularies)-1)]
+        if len(ret) + len(new_word) + 1 <= N:
+            ret += new_word + " "
+        else:
+            break
+    ret = ret[:-1]
+    return ret
+    
 
 # Returns 1 with prob 1, else 0
 def flipCoin(prob1):
@@ -28,27 +54,16 @@ def encrypt(message, key, probRandom):
             ret += random.choice(ALPH_LIST)
         else:
             ret += key[message[msgIdx]]
-        msgIdx += 1
+            msgIdx += 1
     return ret
 
 if __name__=="__main__":
-    plaintexts = []
-    plaintexts.append(
-    "underwaists wayfarings fluty analgia refuels transcribing nibbled okra buttonholer venalness hamlet praus apprisers presifted cubital walloper dissembler bunting wizardries squirrel preselect befitted licensee encumbrances proliferations tinkerer egrets recourse churl kolinskies ionospheric docents unnatural scuffler muches petulant acorns subconscious xyster tunelessly boners slag amazement intercapillary manse unsay embezzle stuccoer dissembles batwing valediction iceboxes ketchups phonily con"
-    )
-    plaintexts.append(
-    "rhomb subrents brasiers render avg tote lesbian dibbers jeopardy struggling urogram furrowed hydrargyrum advertizing cheroots goons congratulation assaulters ictuses indurates wingovers relishes briskly livelihoods inflatable serialized lockboxes cowers holster conciliating parentage yowing restores conformities marted barrettes graphically overdevelop sublimely chokey chinches abstracts rights hockshops bourgeoisie coalition translucent fiascoes panzer mucus capacitated stereotyper omahas produ"
-    )
-    plaintexts.append(
-    "yorkers peccaries agenda beshrews outboxing biding herons liturgies nonconciliatory elliptical confidants concealable teacups chairmanning proems ecclesiastically shafting nonpossessively doughboy inclusion linden zebroid parabolic misadventures fanciers grovelers requiters catmints hyped necklace rootstock rigorously indissolubility universally burrowers underproduced disillusionment wrestling yellowbellied sherpa unburnt jewelry grange dicker overheats daphnia arteriosclerotic landsat jongleur"
-    )
-    plaintexts.append(
-    "cygnets chatterers pauline passive expounders cordwains caravel antidisestablishmentarianism syllabubs purled hangdogs clonic murmurers admirable subdialects lockjaws unpatentable jagging negotiated impersonates mammons chumminess semi pinner comprised managership conus turned netherlands temporariness languishers aerate sadists chemistry migraine froggiest sounding rapidly shelving maligning shriek faeries misogynist clarities oversight doylies remodeler tauruses prostrated frugging comestible "
-    )
-    plaintexts.append(
-    "ovulatory geriatric hijack nonintoxicants prophylactic nonprotective skyhook warehouser paganized brigading european sassier antipasti tallyho warmer portables selling scheming amirate flanker photosensitizer multistage utile paralyzes indexer backrests tarmac doles siphoned casavas mudslinging nonverbal weevil arbitral painted vespertine plexiglass tanker seaworthiness uninterested anathematizing conduces terbiums wheelbarrow kabalas stagnation briskets counterclockwise hearthsides spuriously s"
-    )
-    m = int(input("Enter which plaintext you would like to encrypt (1-5): "))
+    vocabularies = getVocabularies()
+    plaintext = generateLine(vocabularies, 500)
+    print("The generated plaintext is:")
+    print(plaintext)
+    with open('test2_plaintext', 'w') as f:
+        f.write(plaintext)
     p = float(input("Enter the prob of a random char (0-1): "))
-    with open('encrypted', 'w') as f:
-        f.write(encrypt(plaintexts[m-1], getKey(), p))
+    with open('test2_encrypted', 'w') as f:
+        f.write(encrypt(plaintext, getKey(), p))
