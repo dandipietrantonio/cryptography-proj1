@@ -24,6 +24,7 @@ with open('test2_decrypted') as f:
     decryptedtext = f.readline().strip()
 decryptedwords = decryptedtext.split(' ')
 
-print("The LDistance is", LDistance(decryptedwords, plaintextwords))
-print("The difference in number of words is", LDistance(decryptedwords, plaintextwords))
-
+difference_word_num = LDistance(decryptedwords, plaintextwords)
+print("The LDistance is", LDistance(decryptedtext, plaintext))
+print("The difference in number of words is", difference_word_num)
+print("Difference/Total in words is", difference_word_num, "/", len(plaintextwords), "=", difference_word_num/len(plaintextwords))
