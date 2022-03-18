@@ -69,7 +69,7 @@ int LDistance(const string& lhs, const string& rhs) {
 }
 
 // Find the closet word to target in vocabularies according to LDistance
-string findClosetWord(const string& target, vector<string>& vocabularies) {
+pair<string, int> findClosetWord(const string& target, vector<string>& vocabularies) {
     string prediction;
     int predDistance = -1;
     for (auto& voc : vocabularies) {
@@ -79,12 +79,12 @@ string findClosetWord(const string& target, vector<string>& vocabularies) {
             predDistance = currDistance;
         }
     }
-    return prediction;
+    return pair<string, int>(prediction, predDistance);
 }
 
 // Find next possible word from start in decryptedText in vocabularies
 // Bad performance, abandon
-string findNextWord(int start, const string& decryptedText, vector<string>& vocabularies) {
+pair<string, int> findNextWord(int start, const string& decryptedText, vector<string>& vocabularies) {
     string prediction;
     int predDistance = -1;
     for (auto& voc : vocabularies) {
@@ -97,7 +97,15 @@ string findNextWord(int start, const string& decryptedText, vector<string>& voca
             }
         }
     }
-    return prediction;
+    return pair<string, int>(prediction, predDistance);
+}
+
+void tokenize(const string& target, vector<string>& output) {
+    stringstream ss(target);
+    string token;
+    while (getline(ss, token, ' ')){
+        output.push_back(token);
+    }
 }
 
 int main() {
@@ -140,52 +148,59 @@ int main() {
     vector<char>* vocabularySortedChar = sortFreqMap(vocabularyMap);
 
     // Remove space from vocabularySortedChar
+    vocabularySortedChar->erase(find(vocabularySortedChar->begin(), vocabularySortedChar->end(), ' '));
 
-    // Map characters according to distribution
-    unordered_map<char, char> decodeMap;
-    for (int j=0; j<inputSortedChar->size(); j++) {
-        decodeMap.insert(pair<char, char>((*inputSortedChar)[j], (*vocabularySortedChar)[j]));
+    // Randomly select a character in ciphertext as space and calculate total distance from words
+    string retDecryptText = "";
+    int minDecryptDistance = -1;
+    for (int spaceInd=inputSortedChar->size()-1; spaceInd>inputSortedChar->size()-4; spaceInd--) {
+        string currMapDecrypt = "";
+        int currMapDistance = 0;
+        vector<char> inputSortedCharCP = *inputSortedChar;
+        char spaceMap = inputSortedCharCP[spaceInd];
+        inputSortedCharCP.erase(inputSortedCharCP.begin()+spaceInd);
+
+        // Map characters according to distribution
+        unordered_map<char, char> decodeMap;
+        for (int j=0; j<inputSortedCharCP.size(); j++) {
+            decodeMap.insert(pair<char, char>(inputSortedCharCP[j], (*vocabularySortedChar)[j]));
+        }
+        decodeMap.insert(pair<char, char>(spaceMap , ' '));
+
+        // Given decodeMap, decode ciphertext and find the LDistance decrypted text and corresponding plaintext 
+        char decryptedText [input.length()];
+        for (int j=0; j<input.length(); j++) {
+            decryptedText[j] = decodeMap[input[j]];
+        }
+        string decryptedTextStr = decryptedText;
+        
+        // Split the decryptedText by space
+        vector<string> tokenizedDecrypted;
+        tokenize(decryptedTextStr, tokenizedDecrypted);
+
+        for (int i=0; i<tokenizedDecrypted.size(); i++) {
+            string currToken = tokenizedDecrypted[i];
+            if (currToken.length() < 5 && i < tokenizedDecrypted.size()-1) {
+                i++;
+                currToken += ' ' + tokenizedDecrypted[i];
+            }
+            pair<string, int> predictionPair = findClosetWord(currToken, vocabularies);
+            currMapDecrypt += predictionPair.first + ' ';
+            currMapDistance += predictionPair.second;
+        }
+        currMapDecrypt = currMapDecrypt.substr(0, currMapDecrypt.length()-1);
+        if (minDecryptDistance == -1 || currMapDistance < minDecryptDistance) {
+            minDecryptDistance = currMapDistance;
+            retDecryptText = currMapDecrypt;
+        }
+        cout << currMapDistance << endl;
     }
-
-    // Given decodeMap, decode ciphertext and find the LDistance decrypted text and corresponding plaintext 
-    char decryptedText [input.length()];
-    for (int j=0; j<input.length(); j++) {
-        decryptedText[j] = decodeMap[input[j]];
-    }
-    string decryptedTextStr = decryptedText;
-    cout << decryptedText << endl;
-
-    // Trial1
-    // Given decryptedText, split the decryptedText into average number of words
-    vector<string> decryptedWords;
-    string ret = "";
-    int averageWordLength = input.length() / AVGWORDCOUNT;
-    for (int i=0; i<input.length(); i+=averageWordLength) {
-        decryptedWords.push_back(decryptedTextStr.substr(i, averageWordLength));
-    }
-    for (auto& it:decryptedWords){
-        ret += findClosetWord(it, vocabularies) + " ";
-    }
-    ret = ret.substr(0, ret.length()-1);
-
-    // Trial 2: the performance is too bad
-    // int startPointer = 0;
-    // string ret = "";
-    // while (startPointer < decryptedTextStr.length()) {
-    //     string nextWord = findNextWord(startPointer, decryptedTextStr, vocabularies);
-    //     if (nextWord.length() > 0) {
-    //         ret += nextWord + " ";
-    //         startPointer = ret.length();
-    //     }
-    //     else {
-    //         break;
-    //     }
-    // }
-
+    
+    cout << "===========" << endl;
     cout << "My guess is:" <<endl;
-    cout << ret << endl;
+    cout << retDecryptText << endl;
     ofstream myfile;
     myfile.open ("test2_decrypted");
-    myfile << ret;
+    myfile << retDecryptText;
     myfile.close();
 }
