@@ -68,6 +68,7 @@ int LDistance(const string& lhs, const string& rhs) {
     return dist[ll][lr];
 }
 
+// Find the closet word to target in vocabularies according to LDistance
 string findClosetWord(const string& target, vector<string>& vocabularies) {
     string prediction;
     int predDistance = -1;
@@ -76,6 +77,24 @@ string findClosetWord(const string& target, vector<string>& vocabularies) {
         if (predDistance == -1 || currDistance < predDistance) {
             prediction = voc;
             predDistance = currDistance;
+        }
+    }
+    return prediction;
+}
+
+// Find next possible word from start in decryptedText in vocabularies
+// Bad performance, abandon
+string findNextWord(int start, const string& decryptedText, vector<string>& vocabularies) {
+    string prediction;
+    int predDistance = -1;
+    for (auto& voc : vocabularies) {
+        if(start + voc.length() < decryptedText.length()){
+            string target = decryptedText.substr(start, voc.length());
+            int currDistance = LDistance(voc, target);
+            if (predDistance == -1 || currDistance < predDistance) {
+                prediction = voc;
+                predDistance = currDistance;
+            }
         }
     }
     return prediction;
@@ -132,7 +151,9 @@ int main() {
         decryptedText[j] = decodeMap[input[j]];
     }
     string decryptedTextStr = decryptedText;
-    
+    cout << decryptedText << endl;
+
+    // Trial1
     // Given decryptedText, split the decryptedText into average number of words
     vector<string> decryptedWords;
     string ret = "";
@@ -144,6 +165,21 @@ int main() {
         ret += findClosetWord(it, vocabularies) + " ";
     }
     ret = ret.substr(0, ret.length()-1);
+
+    // Trial 2: the performance is too bad
+    // int startPointer = 0;
+    // string ret = "";
+    // while (startPointer < decryptedTextStr.length()) {
+    //     string nextWord = findNextWord(startPointer, decryptedTextStr, vocabularies);
+    //     if (nextWord.length() > 0) {
+    //         ret += nextWord + " ";
+    //         startPointer = ret.length();
+    //     }
+    //     else {
+    //         break;
+    //     }
+    // }
+
     cout << "My guess is:" <<endl;
     cout << ret << endl;
     ofstream myfile;
