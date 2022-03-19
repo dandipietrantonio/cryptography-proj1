@@ -7,7 +7,7 @@
 using namespace std;
 
 string ALPH = "abcdefghijklmnopqrstuvwxyz ";
-int N = 500;
+int L = 500;
 
 void initializeMap(unordered_map<char, int> *m)
 {
@@ -81,21 +81,6 @@ int LDistance(const string &lhs, const string &rhs)
 
 int main(int argc, char *argv[])
 {
-    // Initialize an unordered map for input
-    unordered_map<char, int> inputFreqMap;
-    initializeMap(&inputFreqMap);
-
-    // // Get the input from stdin
-    // string input;
-    // cout << "Input string: ";
-    // getline(cin, input);
-
-    // Get the input from "encypted"
-    // ifstream inFile("encrypted");
-    // string input;
-    // getline(inFile, input);
-    // cout << input << endl;
-
     // Get the input from stdin
     string input;
     if (argc == 1) // user wants to input enc from stdin
@@ -108,11 +93,14 @@ int main(int argc, char *argv[])
         input = argv[1];
     }
 
+    // Initialize a map to get the character frequency of the input
+    unordered_map<char, int> inputFreqMap;
+    initializeMap(&inputFreqMap);
     getCharFreq(inputFreqMap, input);
-    vector<char> *inputSortedChar = sortFreqMap(inputFreqMap);
+    vector<char> *inputSortedChar = sortFreqMap(inputFreqMap); // Characters sorted from least to most frequent
 
-    unordered_map<char, char> inputLabelMap;
     // Map characters according to distribution by group
+    unordered_map<char, char> inputLabelMap;
     for (int j = 0; j < inputSortedChar->size(); j++)
     {
         int currGroupInd = j / 2;
@@ -125,74 +113,54 @@ int main(int argc, char *argv[])
     {
         labeledInputText[j] = inputLabelMap[input[j]];
     }
-    // cout << labeledInputText <<endl;
-    // Initialize an unordered map for plaintexts
-    vector<string> pTextMap;
 
     // Get the plaintext from file "dictionary_1.txt"
-    ifstream plainTFile("dictionary_1.txt");
-    string line;
-    string aggregratedPlainText;
-    while (getline(plainTFile, line))
-    {
-        if (line.length() == 0)
-            continue;
-        if (line.substr(0, 4) == "Test")
-            continue;
-        if (line.substr(0, 21) == "Candidate Plaintext #")
-            continue;
-        pTextMap.push_back(line);
-        aggregratedPlainText += line;
-    }
-
-    // The accuracy of using aggregrated character distribution is not very high, delete before submission
-    // // Get the aggregrated character distribution from plaintexts
-    // getCharFreq(pTextFreqMap, aggregratedPlainText);
-    // vector<char>* pTextSortedChar = sortFreqMap(pTextFreqMap);
+    vector<string> plaintexts = {
+        "underwaists wayfarings fluty analgia refuels transcribing nibbled okra buttonholer venalness hamlet praus apprisers presifted cubital walloper dissembler bunting wizardries squirrel preselect befitted licensee encumbrances proliferations tinkerer egrets recourse churl kolinskies ionospheric docents unnatural scuffler muches petulant acorns subconscious xyster tunelessly boners slag amazement intercapillary manse unsay embezzle stuccoer dissembles batwing valediction iceboxes ketchups phonily con",
+        "rhomb subrents brasiers render avg tote lesbian dibbers jeopardy struggling urogram furrowed hydrargyrum advertizing cheroots goons congratulation assaulters ictuses indurates wingovers relishes briskly livelihoods inflatable serialized lockboxes cowers holster conciliating parentage yowing restores conformities marted barrettes graphically overdevelop sublimely chokey chinches abstracts rights hockshops bourgeoisie coalition translucent fiascoes panzer mucus capacitated stereotyper omahas produ",
+        "yorkers peccaries agenda beshrews outboxing biding herons liturgies nonconciliatory elliptical confidants concealable teacups chairmanning proems ecclesiastically shafting nonpossessively doughboy inclusion linden zebroid parabolic misadventures fanciers grovelers requiters catmints hyped necklace rootstock rigorously indissolubility universally burrowers underproduced disillusionment wrestling yellowbellied sherpa unburnt jewelry grange dicker overheats daphnia arteriosclerotic landsat jongleur",
+        "cygnets chatterers pauline passive expounders cordwains caravel antidisestablishmentarianism syllabubs purled hangdogs clonic murmurers admirable subdialects lockjaws unpatentable jagging negotiated impersonates mammons chumminess semi pinner comprised managership conus turned netherlands temporariness languishers aerate sadists chemistry migraine froggiest sounding rapidly shelving maligning shriek faeries misogynist clarities oversight doylies remodeler tauruses prostrated frugging comestible ",
+        "ovulatory geriatric hijack nonintoxicants prophylactic nonprotective skyhook warehouser paganized brigading european sassier antipasti tallyho warmer portables selling scheming amirate flanker photosensitizer multistage utile paralyzes indexer backrests tarmac doles siphoned casavas mudslinging nonverbal weevil arbitral painted vespertine plexiglass tanker seaworthiness uninterested anathematizing conduces terbiums wheelbarrow kabalas stagnation briskets counterclockwise hearthsides spuriously s",
+    };
 
     // Get the character distribution of all plaintexts separately
-    vector<vector<char> *> pTextSortedChars;
-    for (string item : pTextMap)
+    vector<vector<char> *> pTextCharsSortedByFreq; // index i holds a list of chars sorted by frequency in increasing order for plaintext
+    for (string text : plaintexts)
     {
         unordered_map<char, int> pTextFreqMap;
         initializeMap(&pTextFreqMap);
-        getCharFreq(pTextFreqMap, item);
+        getCharFreq(pTextFreqMap, text);
         vector<char> *pTextSortedChar = sortFreqMap(pTextFreqMap);
-        pTextSortedChars.push_back(pTextSortedChar);
+        pTextCharsSortedByFreq.push_back(pTextSortedChar);
     }
 
     // Create a vector storing the distance between decrypted text and each plaintext
     vector<int> decryptDistances;
-    for (int i = 0; i < pTextSortedChars.size(); i++)
+    for (int i = 0; i < pTextCharsSortedByFreq.size(); i++)
     {
-        unordered_map<char, char> labelMap;
         // Map characters according to distribution by group
-        for (int j = 0; j < (*pTextSortedChars[i]).size(); j++)
+        unordered_map<char, char> labelMap;
+        vector<char> curPlaintextCharsSortedByFreq = *pTextCharsSortedByFreq[i];
+        for (int j = 0; j < curPlaintextCharsSortedByFreq.size(); j++)
         {
             int currGroupInd = j / 2;
-            labelMap.insert(pair<char, char>((*pTextSortedChars[i])[j], char('a' + currGroupInd)));
+            labelMap.insert(pair<char, char>(curPlaintextCharsSortedByFreq[j], char('a' + currGroupInd)));
         }
-        // unordered_map<char, char> decodeMap;
-        // for (int j=0; j<inputSortedChar->size(); j++) {
-        //     decodeMap.insert(pair<char, char>((*inputSortedChar)[j], (*pTextSortedChars[i])[j]));
-        // }
 
         // Given decodeMap, decode ciphertext and find the LDistance decrypted text and corresponding plaintext
-        char labeledPText[N];
-        for (int j = 0; j < N; j++)
+        char labeledPText[input.length()];
+        for (int j = 0; j < input.length(); j++)
         {
-            labeledPText[j] = labelMap[pTextMap[i][j]];
+            labeledPText[j] = labelMap[plaintexts[i][j]];
         }
         int currDistance = LDistance(labeledPText, labeledInputText);
 
         // Store the result
+        // cout << "Here's one " << i << ": " << labeledPText << endl;
         decryptDistances.push_back(currDistance);
-
-        // Store the corresponding distance
-        // cout << currDistance << endl;
     }
 
     // Find the plaintext id with minimum distance to corresponding decrypted text
     int guessedPlainTextId = distance(begin(decryptDistances), min_element(begin(decryptDistances), end(decryptDistances)));
-    cout << "My plaintext guess is: " << pTextMap[guessedPlainTextId] << endl;
+    cout << "My plaintext guess is: " << plaintexts[guessedPlainTextId] << endl;
 }
