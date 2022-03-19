@@ -13,21 +13,23 @@ vector<char> SORTED_CHAR_DIST = {'j', 'q', 'x', 'w', 'z', 'y', 'v', 'h', 'k', 'b
 
 // The characters are divided into frequency clusters. These clusters are used
 // to swap characters around and slowly lead us toward the correct answer. The
-// clusters are determined by the character frequency chart in the test2 analysis notebook.
+// clusters are determined by the character frequency chart in the test2 analysis
+// notebook.
 vector<char> T1 = {'e', ' '};
-vector<char> T2 = {'r', 'a', 's', 'l', 'i', 't'};
+vector<char> T2 = {'a', 'r', 's', 'i', 'l', 't'};
+// vector<char> T3 = {};
+vector<vector<char>> ALL_T = {T1, T2};
 // vector<char> T3 = {};
 // vector<char> T4 = {'o', 'n'}
 
 // Vector of all words in dict2
-vector<string> DICT2 = {
-    "lacrosses", "protectional", "blistered", "leaseback", "assurers",
-    "frizzlers", "submerse", "rankness", "moonset", "farcer",
-    "brickyard", "stolonic", "trimmings", "glottic", "harshens",
-    "tortoni", "unlikely", "alefs", "gladding", "favourig",
-    "particulate", "baldpates", "changeover", "lingua", "proctologica",
-    "freaking", "outflanked", "amulets", "imagist", "hyped",
-    "pilfers", "overachiever", "clarence", "outdates", "smeltery"};
+vector<string> DICT2 = {"lacrosses", "protectional", "blistered", "leaseback", "assurers",
+                        "frizzlers", "submerse", "rankness", "moonset", "farcer",
+                        "brickyard", "stolonic", "trimmings", "glottic", "harshens",
+                        "tortoni", "unlikely", "alefs", "gladding", "favourig",
+                        "particulate", "baldpates", "changeover", "lingua", "proctologica",
+                        "freaking", "outflanked", "amulets", "imagist", "hyped",
+                        "pilfers", "overachiever", "clarence", "outdates", "smeltery"};
 
 void initializeMap(unordered_map<char, int> *m)
 {
@@ -99,6 +101,51 @@ int LDistance(const string &lhs, const string &rhs)
     return dist[ll][lr];
 }
 
+int factorial(int n)
+{
+    if (n == 1)
+        return 1;
+    else
+        return n * factorial(n - 1);
+}
+
+/*
+ * Uses a sliding window to compare substring to all windows of the same size
+ * in text. Returns the minimum Levenshtein distance value among all possible
+ * windows.
+ *
+ */
+float findMinLDistanceForSubstringInText(string text, string substring)
+{
+    int curMinLDistance = 2147483647; // make val for int
+    int startIdx = 0;
+    int endIdx = substring.length() - 1;
+
+    while (endIdx < text.length())
+    {
+        int curLDistance = LDistance(substring, text.substr(startIdx, endIdx));
+        if (curLDistance < curMinLDistance)
+        {
+            curMinLDistance = curLDistance;
+        }
+        startIdx++;
+        endIdx++;
+    }
+    return curMinLDistance;
+}
+
+int findIdxOfCharInVector(char c, vector<char> v)
+{
+    for (int i = 0; i < v.size(); i++)
+    {
+        if (v[i] == c)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 int main()
 {
     // Initialize an unordered map for input
@@ -107,40 +154,128 @@ int main()
 
     // // Get the input from stdin
     // string input;
-    // cout << "Input string: ";
+    cout << "Input string: ";
     // getline(cin, input);
 
     // Get the input from "encypted"
     ifstream inFile("test2_encrypted");
     string input;
     getline(inFile, input);
-    // cout << input << endl;
+    cout << input << endl;
 
     // Get char freq of the input
     getCharFreq(inputFreqMap, input);
     vector<char> *inputSortedChar = sortFreqMap(inputFreqMap);
-    cout << "Input char freq: ";
+    // cout << "Input char freq: ";
     for (char c : *inputSortedChar)
     {
-        cout << c << " ";
+        // cout << c << " ";
     }
-    cout << endl;
+    // cout << endl;
 
     // Create a map from encChar to decChar, based on char freq
     unordered_map<char, char> decodingMap;
+    unordered_map<char, char> reverseDecodingMap; // map from decChar to encChar
     for (int i = 0; i < (*inputSortedChar).size(); i++)
     {
-        decodingMap.insert(pair<char, char>((*inputSortedChar)[i], SORTED_CHAR_DIST[i]));
+        decodingMap[(*inputSortedChar)[i]] = SORTED_CHAR_DIST[i];
+
+        reverseDecodingMap[SORTED_CHAR_DIST[i]] = (*inputSortedChar)[i];
     }
 
-    // Attempt to decrypt the message by directly matching character frequencies
-    string decrypted;
-    for (char c : input)
+    string bestDecryptedSoFar;
+    float minAvgMinLDistanceFound = 9999999; // initialize to a high value
+    /*
+     * curPermutation holds the current permutation swap attempt. Let's say
+     * that our current tier is [t1, t2, t3] and our current permutation is
+     * [x1, x2, x3]. This implies that whatever used to be decoded to t1 should
+     * now decode to x1, etc.
+     *
+     */
+    bool firstDecryptionAttempt = true;
+    int curBestNumWordsFound = 0;
+    for (vector<char> tier : ALL_T)
     {
-        decrypted += decodingMap[c];
+
+        sort(tier.begin(), tier.end()); // get the lexicographic order
+
+        vector<char> curPermutation = tier;  // start at the first lexicographic order
+        vector<char> bestPermutation = tier; // the best permutation found so far
+        string curDecryptedAttempt;
+
+        for (int i = 0; i < factorial(tier.size()); i++) // we have to check all n! permutations
+        {
+            // Attempt to decrypt
+            if (firstDecryptionAttempt)
+            {
+                for (char c : input)
+                {
+                    curDecryptedAttempt += decodingMap[c];
+                }
+                firstDecryptionAttempt = false;
+            }
+            else
+            {
+                string temp;
+                for (char c : bestDecryptedSoFar)
+                {
+                    // Update the decrypted attempt, adjusting for the values in this permutation
+                    int foundIdx = findIdxOfCharInVector(c, tier);
+                    if (foundIdx != -1) // the char needs to be substituted
+                    {
+                        temp += curPermutation[foundIdx];
+                    }
+                    else
+                    {
+                        temp += c;
+                    }
+                }
+                curDecryptedAttempt = temp;
+            }
+
+            // Get the average L Distance for each word's min LDistance in the decrypted text
+            int sumOfLDistances = 0; // used for avg
+            for (string word : DICT2)
+            {
+                int minLDistance = findMinLDistanceForSubstringInText(curDecryptedAttempt, word);
+                sumOfLDistances += minLDistance;
+            }
+            float avgMinLDistance = (float)sumOfLDistances / DICT2.size();
+
+            // Update min avg LDistance found if necessary
+            // cout << "Avg LDistance: " << avgMinLDistance << endl;
+            int numWordsFound = 0;
+            for (string word : DICT2)
+            {
+                if (curDecryptedAttempt.find(word) != string::npos)
+                    numWordsFound++;
+            }
+            if (numWordsFound == curBestNumWordsFound)
+            {
+                if (avgMinLDistance < minAvgMinLDistanceFound)
+                {
+                    // cout << "Found a new best guess: " << curDecryptedAttempt << endl;
+                    // cout << "The previous guess was: " << bestDecryptedSoFar << endl;
+                    bestDecryptedSoFar = curDecryptedAttempt;
+                    minAvgMinLDistanceFound = avgMinLDistance;
+                    bestPermutation = curPermutation;
+                }
+            }
+            else if (numWordsFound > curBestNumWordsFound)
+            {
+                cout << "WE ACTUALY FOUND WORDS!!!!! We found this many: " << numWordsFound << endl;
+                bestDecryptedSoFar = curDecryptedAttempt;
+                minAvgMinLDistanceFound = avgMinLDistance;
+                bestPermutation = curPermutation;
+                curBestNumWordsFound = numWordsFound;
+            }
+
+            // Adjust the cur permutation
+            next_permutation(curPermutation.begin(), curPermutation.end());
+        }
     }
 
-    // Print the decrypted text
-    cout << "My guess is: " << endl
-         << decrypted << endl;
+    cout << "My best guess is: " << endl
+         << bestDecryptedSoFar << endl;
+    cout << "with an average min LDistance of " << minAvgMinLDistanceFound << endl;
 }
