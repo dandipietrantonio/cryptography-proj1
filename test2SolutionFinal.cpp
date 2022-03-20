@@ -8,7 +8,8 @@ using namespace std;
 
 string ALPH = "abcdefghijklmnopqrstuvwxyz ";
 size_t SHORTESTVOCLEN = 5; // The length of shortest word in vocabularies
-size_t SPACECANDIDATERANGE = 10; // The range of finding characters mapped to space
+size_t SPACECANDIDATERANGE = 4; // The range of finding characters mapped to space
+int GROUPSIZE = 3;
 
 void initializeMap(unordered_map<char, int> *m)
 {
@@ -147,7 +148,7 @@ int main(int argc, char *argv[])
     unordered_map<char, char> vocabularyCharLabelMap;
      for (size_t j=0; j<vocabularySortedChar->size(); j++) 
     {
-        int currGroupInd = j / 2;
+        int currGroupInd = j / GROUPSIZE;
         vocabularyCharLabelMap.insert(pair<char, char>((*vocabularySortedChar)[j], char('a'+currGroupInd)));
     }
 
@@ -179,7 +180,7 @@ int main(int argc, char *argv[])
         unordered_map<char, char> inputLabelMap;
          for (size_t j=0; j<inputSortedCharCP.size(); j++) 
         {
-            int currGroupInd = j / 2;
+            int currGroupInd = j / GROUPSIZE;
             inputLabelMap.insert(pair<char, char>(inputSortedCharCP[j], char('a'+currGroupInd)));
         }
         inputLabelMap.insert(pair<char, char>(spaceMap , ' '));

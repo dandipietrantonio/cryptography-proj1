@@ -57,13 +57,13 @@ def encrypt(message, key, probRandom):
             msgIdx += 1
     return ret
 
-if __name__=="__main__":
-    vocabularies = getVocabularies()
-    plaintext = generateLine(vocabularies, 500)
-    print("The generated plaintext is:")
-    print(plaintext)
-    with open('test2_plaintext', 'w') as f:
-        f.write(plaintext)
-    p = float(input("Enter the prob of a random char (0-1): "))
-    with open('test2_encrypted', 'w') as f:
-        f.write(encrypt(plaintext, getKey(), p))
+# if __name__=="__main__":
+#     vocabularies = getVocabularies()
+#     plaintext = generateLine(vocabularies, 500)
+#     print("The generated plaintext is:")
+#     print(plaintext)
+#     with open('test2_plaintext', 'w') as f:
+#         f.write(plaintext)
+#     p = float(input("Enter the prob of a random char (0-1): "))
+#     with open('test2_encrypted', 'w') as f:
+#         f.write(encrypt(plaintext, getKey(), p))
