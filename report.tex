@@ -94,6 +94,38 @@ For each symbolized candidate plaintext, we compute the Levenshtein distance bet
 
 This process is unique in that it doesn't attempt to morph the encrypted text into the plaintext but instead attempts to morph each candidate plaintext into the encrypted text, using grouping to adjust for randomness that is introduced in the encryption scheme.
 
+\subsection{Approach 1 - Test 2}
+At a high level, our approach to test 2 was the following:
+\begin{enumerate}
+
+    \item Store candidate vocabularies and combine candidate vocabularies into aggregated vocabulary sentence.
+    \item Get the character frequency distribution of the aggregated vocabulary sentence.
+    \item Map characters with similar frequencies to the same symbol (grouping stage).
+    \item For each character in the candidate vocabularies, change that character to the symbol it maps to. We refer to this new symbol-substituted vocabulary as the \emph{symbolized vocabulary}. Store the results in an unordered map so that we can retrieve original vocabulary later.
+    \item Get the character frequency distribution of the encrypted text.
+    \item Decrypt the input with different character mapping and find the best-matching combination of vocabularies
+    \begin{enumerate}
+        \item Iteratively choose one character in frequency distribution of input and map it to space in decrypted text
+        \item Map remaining characters with similar frequencies to the same symbol (grouping stage).
+        \item For each character in the input, change that character to the symbol it maps to. We refer to this new symbol-substituted input as the \emph{symbolized input}.
+        \item In each iteration, tokenize the sinput on space and find the best-matching word in vocabularies for each token according to Levenshtein distance between the token and the vocabularies
+        \item Record the total Levenshtein distance converting to sentence and combined the best-matching vocabularies into a sentence
+        \item Choose the sentence that has lowest total Levenshtein distance
+    \end{enumerate}
+    \item Output the answer as the sentence that has lowest total Levenshtein distance
+
+\end{enumerate}
+
+Our approach for test 2 was generally similar to our approach in test 1. However, the difference in problem setting requires us to modify some details to adapt.
+
+To start with, we are not provided with plaintexts but provided with vocabularies that make up the plaintext. To learn about the distribution of characters of vocabularies, we combined the vocabularies into an aggregated sentence joined by space and performed character distribution analysis on the aggregated sentence. Then we remove the space from the distribution and group the characters with similar frequencies. 
+
+Once we have our vocabularies symbol mapping, we create $v$ \emph{symbolized vocabularies}, that we can refer to later.
+
+For our encrypted input, we perform character distribution analysis and store a list of characters sorted by frequency. Since finding the spaces in plaintext is the essential in test 2 and that it is difficult to correctly find the spaces from input, we iteratively assign one of the characters as space. Then, in each iteration, we group and label characters according to frequency as in test 1 and get a \emph{symbolized input}. Then we tokenize the \emph{symobolized input} on spaces and get a list of symbolized tokens. For each symbolized token, we compare it with \emph{symbolized vocabularies} individually to find the best-matching vocabulary with least Levenshtein distance. We then record the total Levenshtein distance between symbolized tokens and its corresponding best-matching vocabularies and the sentence they created. After all iterations, the sentence with lowest Levenshtein distance is chosen as our output.
+
+This approach has good performance in finding the true mapping from an input character to space. The accuracy of the approach is about 80\% correct with 0 randomness. The accuracy is around 20\% for 0.2 randomness.
+
 
 \section{Formal description of approach}
 Much like the previous section, this section is divided into two subsections, one for each approach we took.
