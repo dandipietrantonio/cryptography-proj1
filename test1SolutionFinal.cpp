@@ -11,7 +11,7 @@ int L = 500;
 
 void initializeMap(unordered_map<char, int> *m)
 {
-    for (int i = 0; i < ALPH.length(); i++)
+    for (size_t i = 0; i < ALPH.length(); i++)
     {
         (*m).insert(pair<char, int>(ALPH[i], 0));
     }
@@ -21,7 +21,7 @@ void initializeMap(unordered_map<char, int> *m)
 void getCharFreq(unordered_map<char, int> &m, const string &text)
 {
     // Count the character frequencies
-    for (int i = 0; i < text.length(); i++)
+    for (size_t i = 0; i < text.length(); i++)
     {
         m[text[i]]++;
     }
@@ -60,17 +60,17 @@ int LDistance(const string &lhs, const string &rhs)
     int lr = rhs.length();
     vector<vector<int>> dist(ll + 1, vector<int>(lr + 1));
 
-    for (int i = 1; i <= ll; i++)
+    for (size_t i = 1; i <= ll; i++)
     {
         dist[i][0] = i;
     }
-    for (int j = 1; j <= lr; j++)
+    for (size_t j = 1; j <= lr; j++)
     {
         dist[0][j] = j;
     }
-    for (int i = 1; i <= ll; i++)
+    for (size_t i = 1; i <= ll; i++)
     {
-        for (int j = 1; j <= lr; j++)
+        for (size_t j = 1; j <= lr; j++)
         {
             int subCost = lhs[i - 1] == rhs[j - 1] ? 0 : 1;
             dist[i][j] = min(min(1 + dist[i][j - 1], subCost + dist[i - 1][j - 1]), 1 + dist[i - 1][j]);
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 
     // Map characters according to distribution by group
     unordered_map<char, char> inputLabelMap;
-    for (int j = 0; j < inputSortedChar->size(); j++)
+    for (size_t j = 0; j < inputSortedChar->size(); j++)
     {
         int currGroupInd = j / 2;
         inputLabelMap.insert(pair<char, char>((*inputSortedChar)[j], char('a' + currGroupInd)));
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 
     // Given labelMap, label ciphertext
     char labeledInputText[input.length()];
-    for (int j = 0; j < input.length(); j++)
+    for (size_t j = 0; j < input.length(); j++)
     {
         labeledInputText[j] = inputLabelMap[input[j]];
     }
@@ -136,12 +136,12 @@ int main(int argc, char *argv[])
 
     // Create a vector storing the distance between decrypted text and each plaintext
     vector<int> decryptDistances;
-    for (int i = 0; i < pTextCharsSortedByFreq.size(); i++)
+    for (size_t i = 0; i < pTextCharsSortedByFreq.size(); i++)
     {
         // Map characters according to distribution by group
         unordered_map<char, char> labelMap;
         vector<char> curPlaintextCharsSortedByFreq = *pTextCharsSortedByFreq[i];
-        for (int j = 0; j < curPlaintextCharsSortedByFreq.size(); j++)
+        for (size_t j = 0; j < curPlaintextCharsSortedByFreq.size(); j++)
         {
             int currGroupInd = j / 2;
             labelMap.insert(pair<char, char>(curPlaintextCharsSortedByFreq[j], char('a' + currGroupInd)));
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
 
         // Given decodeMap, decode ciphertext and find the LDistance decrypted text and corresponding plaintext
         char labeledPText[input.length()];
-        for (int j = 0; j < input.length(); j++)
+        for (size_t j = 0; j < input.length(); j++)
         {
             labeledPText[j] = labelMap[plaintexts[i][j]];
         }

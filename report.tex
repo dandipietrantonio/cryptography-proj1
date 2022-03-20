@@ -94,7 +94,7 @@ For each symbolized candidate plaintext, we compute the Levenshtein distance bet
 
 This process is unique in that it doesn't attempt to morph the encrypted text into the plaintext but instead attempts to morph each candidate plaintext into the encrypted text, using grouping to adjust for randomness that is introduced in the encryption scheme.
 
-\subsection{Approach 1 - Test 2}
+\subsection{Approach 2 - Test 2}
 At a high level, our approach to test 2 was the following:
 \begin{enumerate}
 
@@ -103,16 +103,16 @@ At a high level, our approach to test 2 was the following:
     \item Map characters with similar frequencies to the same symbol (grouping stage).
     \item For each character in the candidate vocabularies, change that character to the symbol it maps to. We refer to this new symbol-substituted vocabulary as the \emph{symbolized vocabulary}. Store the results in an unordered map so that we can retrieve original vocabulary later.
     \item Get the character frequency distribution of the encrypted text.
-    \item Decrypt the input with different character mapping and find the best-matching combination of vocabularies
+    \item Decrypt the input with different character mapping and find the best-matching combination of vocabularies:
     \begin{enumerate}
-        \item Iteratively choose one character in frequency distribution of input and map it to space in decrypted text
+        \item Iteratively choose one character in frequency distribution of input and map it to space in decrypted text.
         \item Map remaining characters with similar frequencies to the same symbol (grouping stage).
         \item For each character in the input, change that character to the symbol it maps to. We refer to this new symbol-substituted input as the \emph{symbolized input}.
-        \item In each iteration, tokenize the sinput on space and find the best-matching word in vocabularies for each token according to Levenshtein distance between the token and the vocabularies
-        \item Record the total Levenshtein distance converting to sentence and combined the best-matching vocabularies into a sentence
-        \item Choose the sentence that has lowest total Levenshtein distance
+        \item In each iteration, tokenize the sinput on space and find the best-matching word in vocabularies for each token according to Levenshtein distance between the token and the vocabularies.
+        \item Record the total Levenshtein distance converting to sentence and combined the best-matching vocabularies into a sentence.
+        \item Choose the sentence that has lowest total Levenshtein distance.
     \end{enumerate}
-    \item Output the answer as the sentence that has lowest total Levenshtein distance
+    \item Output the answer as the sentence that has lowest total Levenshtein distance.
 
 \end{enumerate}
 
@@ -123,8 +123,6 @@ To start with, we are not provided with plaintexts but provided with vocabularie
 Once we have our vocabularies symbol mapping, we create $v$ \emph{symbolized vocabularies}, that we can refer to later.
 
 For our encrypted input, we perform character distribution analysis and store a list of characters sorted by frequency. Since finding the spaces in plaintext is the essential in test 2 and that it is difficult to correctly find the spaces from input, we iteratively assign one of the characters as space. Then, in each iteration, we group and label characters according to frequency as in test 1 and get a \emph{symbolized input}. Then we tokenize the \emph{symobolized input} on spaces and get a list of symbolized tokens. For each symbolized token, we compare it with \emph{symbolized vocabularies} individually to find the best-matching vocabulary with least Levenshtein distance. We then record the total Levenshtein distance between symbolized tokens and its corresponding best-matching vocabularies and the sentence they created. After all iterations, the sentence with lowest Levenshtein distance is chosen as our output.
-
-This approach has good performance in finding the true mapping from an input character to space. The accuracy of the approach is about 80\% correct with 0 randomness. The accuracy is around 20\% for 0.2 randomness.
 
 
 \section{Formal description of approach}
@@ -180,6 +178,58 @@ Note that we do not include the implementation of the LevenshteinDistance functi
     \State /*Step 6: Output the candidate */
     \State \textbf{Output} candidatePlaintexts[minCandPtxtIdx]
 \end{algorithmic}
+
+\section{Performance Analysis}
+This section analyze the performance of the approaches mentioned above.
+\subsection{Approach 1 - Test 1}
+To test on the performance, a script(testCorrectness.py) has been created to iteratively choosing the plaintext in dictionary\_1, encrypt the plaintext, run the executable of Approach 1, compare the result with chosen plaintext.
+\subsubsection{Plaintext Selection}
+The script iteratively choose a plaintext from dictionary_1.
+\subsubsection{Plaintext Encryption}
+The script encrypt the plaintext according to encryption scheme provided by handouts.
+\subsubsection{Execution}
+The script runs the executable of Approach 1 and retrieve the results from stdout.
+\subsubsection{Comparison}
+The script compare the result with chosen plaintext and record the number of errors.
+\subsubsection{Repetition}
+Repeat 4.1.1 to 4.1.5 for different randomness $p$. \\
+
+\subsection{Approach 2 - Test 2}
+Since no plaintext is provided for Test 2, the performance of Approach 2 is assessed by the accuracy in finding the chosen words from dictionary in correct sequence. To test on the performance, a script(test2Correctness.py) has been created to generate plaintext, encrypt the plaintext, execute Approach 2 executable, and calculate the Levenshtein distance with plaintext.
+
+\subsubsection{Plaintext Generation}
+The script repeatedly and randomly choose a word from dictionary_2, join into a sentence with space, until the length of the generated sentence is larger than $L$. Then, the script splits the plaintext on space to generate a list of words (plaintextWords).
+\subsubsection{Plaintext Encryption}
+The encryption process is similar to the process in Test 1. Encrypt the plaintext with randomness $p$.
+\subsubsection{Execution}
+The script runs the executable of Approach 2 and retrieve the results from stdout.
+\subsubsection{Calculate Distance}
+The script splits the result on space to generate a list of words(decryptedWords). Calculate the Levenshtein distance between decryptedWords and plaintextWords.
+\subsubsection{Summary}
+Repeat 4.2.2 to 4.2.4 for couple hundreds of times. Calculate the mean and minimum Levenshtein distance.
+\subsubsection{Repetition}
+Repeat 4.2.1 to 4.2.5 for different randomness $p$. \\
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|} 
+ \hline
+ Randomness($p$) & Average Distance in Words & Minimum Distance in Words & #Word \\ [0.5ex] 
+ \hline\hline
+ 0.00 & 10.66 & 6 & 53 \\ 
+ \hline
+ 0.05 & 14.54 & 5 & 53 \\
+ \hline
+ 0.10 & 19.02 & 3 & 53 \\
+ \hline
+ 0.15 & 25.98 & 8 & 53 \\
+ \hline
+ 0.20 & 33.65 & 10 & 53 \\
+ \hline
+ 0.25 & 37.48 & 15 & 53 \\
+ \hline
+\end{tabular} \\
+\caption{Table 1: Test 2 Performance}
+\end{center}
 
 
 \end{document}

@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     print("========")
     p = 0
-    while p <= 0.2:
+    while p <= 0.5:
         currTotalLDistance = 0
         currMinLDistance = float('+inf')
         currTotalAccuracy = 0
@@ -65,7 +65,7 @@ if __name__ == '__main__':
             currLDistance = LDistance(decryptedwords, plaintextwords)
             currTotalLDistance += currLDistance
             currMinLDistance = min(currMinLDistance, currLDistance) 
-        print("At randomness = {:.3f}, the average LDistance is {:.3f}, min LDistance is {:.3f}".format(p, currTotalLDistance/ROUNDS, currMinLDistance))
+        print("At randomness = {:.2f}, the average LDistance of {} rounds is {:.2f}, min LDistance is {:.2f}".format(p, ROUNDS, currTotalLDistance/ROUNDS, currMinLDistance))
 
         p += 0.05
 
