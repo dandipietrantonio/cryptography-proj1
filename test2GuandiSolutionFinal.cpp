@@ -7,79 +7,77 @@
 using namespace std;
 
 string ALPH = "abcdefghijklmnopqrstuvwxyz ";
-int AVGWORDCOUNT = 53;
+size_t SHORTESTVOCLEN = 5; // The length of shortest word in vocabularies
+size_t SPACECANDIDATERANGE = 10; // The range of finding characters mapped to space
 
-void initializeMap(unordered_map<char, int> *m) {
-    for (int i = 0; i < ALPH.length(); i++) {
+void initializeMap(unordered_map<char, int> *m)
+{
+     for (size_t i = 0; i < ALPH.length(); i++)
+    {
         (*m).insert(pair<char, int>(ALPH[i], 0));
     }
 }
 
 // Fill in character frequency into an unorderd map
-void getCharFreq(unordered_map<char, int>& m, const string& text) {
+void getCharFreq(unordered_map<char, int> &m, const string &text)
+{
     // Count the character frequencies
-    for (int i=0; i < text.length(); i++) {
+     for (size_t i = 0; i < text.length(); i++)
+    {
         m[text[i]]++;
     }
 }
 
 // Sort the unordered map according to value (character frequency)
 // return a vector of sorted character
-vector<char>* sortFreqMap(unordered_map<char, int>& m) {
+vector<char> *sortFreqMap(unordered_map<char, int> &m)
+{
     // Declare vector of pairs
     vector<pair<char, int>> mapItems;
-  
+
     // Copy key-value pair from m to mapItems vector
-    for (pair<const char, int>& item : m) {
+    for (pair<const char, int> &item : m)
+    {
         mapItems.push_back(item);
     }
-  
+
     // Sort mapItems vector
-    sort(mapItems.begin(), mapItems.end(), [](auto &left, auto &right) {
-        return left.second < right.second;
-    });
-  
+    sort(mapItems.begin(), mapItems.end(), [](auto &left, auto &right)
+         { return left.second < right.second; });
+
     // Return sorted vector of character by frequency
-    vector<char>* ret = new vector<char>;
-    for (pair<char, int>& item : mapItems) {
+    vector<char> *ret = new vector<char>;
+    for (pair<char, int> &item : mapItems)
+    {
         ret->push_back(char(item.first));
     }
     return ret;
 }
 
 // Find the minimum amount of character changes between two strings
-int LDistance(const string& lhs, const string& rhs) {
-    int ll = lhs.length();
-    int lr = rhs.length();
-    vector<vector<int>> dist(ll+1, vector<int>(lr+1));
-    
-    for(int i=1; i<=ll; i++){
+int LDistance(const string &lhs, const string &rhs)
+{
+    size_t ll = lhs.length();
+    size_t lr = rhs.length();
+    vector<vector<int>> dist(ll + 1, vector<int>(lr + 1));
+
+     for (size_t i = 1; i <= ll; i++)
+    {
         dist[i][0] = i;
     }
-    for(int j=1; j<=lr; j++){
+     for (size_t j = 1; j <= lr; j++)
+    {
         dist[0][j] = j;
     }
-    for(int i=1; i<=ll; i++){
-        for(int j=1; j<=lr; j++){
+     for (size_t i = 1; i <= ll; i++)
+    {
+         for (size_t j = 1; j <= lr; j++)
+        {
             int subCost = lhs[i - 1] == rhs[j - 1] ? 0 : 1;
             dist[i][j] = min(min(1 + dist[i][j - 1], subCost + dist[i - 1][j - 1]), 1 + dist[i - 1][j]);
         }
     }
     return dist[ll][lr];
-}
-
-// Find the closet word to target in vocabularies according to LDistance
-pair<string, int> findClosetWord(const string& target, vector<string>& vocabularies) {
-    string prediction;
-    int predDistance = -1;
-    for (auto& voc : vocabularies) {
-        int currDistance = LDistance(voc, target);
-        if (predDistance == -1 || currDistance < predDistance) {
-            prediction = voc;
-            predDistance = currDistance;
-        }
-    }
-    return pair<string, int>(prediction, predDistance);
 }
 
 // Find the closet word to target in labeledVocabularies according to LDistance
@@ -96,66 +94,47 @@ pair<string, int> findClosetLabeledWord(const string& target, vector<pair<string
     return pair<string, int>(prediction, predDistance);
 }
 
-// Find next possible word from start in decryptedText in vocabularies
-// Bad performance, abandon
-pair<string, int> findNextWord(int start, const string& decryptedText, vector<string>& vocabularies) {
-    string prediction;
-    int predDistance = -1;
-    for (auto& voc : vocabularies) {
-        if(start + voc.length() < decryptedText.length()){
-            string target = decryptedText.substr(start, voc.length());
-            int currDistance = LDistance(voc, target);
-            if (predDistance == -1 || currDistance < predDistance) {
-                prediction = voc;
-                predDistance = currDistance;
-            }
-        }
-    }
-    return pair<string, int>(prediction, predDistance);
-}
-
-void tokenize(const string& target, vector<string>& output) {
+// Tokenize the target by splitting on spaces
+void tokenize(const string& target, vector<string>& output) 
+{
     stringstream ss(target);
     string token;
-    while (getline(ss, token, ' ')){
+    while (getline(ss, token, ' '))
+    {
         output.push_back(token);
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) 
+{
     // Initialize an unordered map for input
     unordered_map<char, int> inputFreqMap;
     initializeMap(&inputFreqMap);
 
-    
-    // // Get the input from stdin
-    // string input;
-    // cout << "Input string: ";
-    // getline(cin, input);
+    // Get the input from stdin
+    string input;
+    if (argc == 1) // user wants to input enc from stdin
+    {
+        cout << "Input string: ";
+        getline(cin, input);
+    }
+    else // user input enc as cli parameter
+    {
+        input = argv[1];
+    }
 
     // Get the input from "test2_encypted"
     ifstream inFile("test2_encrypted");
-    string input;
     getline(inFile, input);
 
     getCharFreq(inputFreqMap, input);
-    vector<char>* inputSortedChar = sortFreqMap(inputFreqMap);
+    vector<char>* inputSortedChar = sortFreqMap(inputFreqMap); // Characters sorted from least to most frequent
 
-    // Get the plaintext vocabularies from file "dictionary_2.txt"
-    vector<string> vocabularies;
-    ifstream vocabularyFile("dictionary_2.txt");
-    string line;
-    string aggregratedWords;
-    while (getline(vocabularyFile, line)){
-        if (line.length() == 0) continue;
-        if (line.substr(0, 4) == "Test") continue;
-        vocabularies.push_back(line);
-        aggregratedWords += line + " ";
-    } 
-    aggregratedWords = aggregratedWords.substr(0, aggregratedWords.length()-1);
-    // cout << aggregratedWords << endl;
+    // Get the plaintext vocabularies and aggregratedWords from file "dictionary_2.txt"
+    vector<string> vocabularies = {"lacrosses","protectional","blistered","leaseback","assurers","frizzlers","submerse","rankness","moonset","farcer","brickyard","stolonic","trimmings","glottic","rotates","twirlier","stuffer","publishable","invalided","harshens","tortoni","unlikely","alefs","gladding","favouring","particulate","baldpates","changeover","lingua","proctological","freaking","outflanked","amulets","imagist","hyped","pilfers","overachiever","clarence","outdates","smeltery"};
+    string aggregratedWords = "lacrosses protectional blistered leaseback assurers frizzlers submerse rankness moonset farcer brickyard stolonic trimmings glottic rotates twirlier stuffer publishable invalided harshens tortoni unlikely alefs gladding favouring particulate baldpates changeover lingua proctological freaking outflanked amulets imagist hyped pilfers overachiever clarence outdates smeltery";
     
-    // Get the aggregrated character distribution from plaintexts
+    // Get the aggregrated character distribution from aggregratedWords
     unordered_map<char, int> vocabularyMap;
     initializeMap(&vocabularyMap);
     getCharFreq(vocabularyMap, aggregratedWords);
@@ -164,60 +143,65 @@ int main() {
     // Remove space from vocabularySortedChar
     vocabularySortedChar->erase(find(vocabularySortedChar->begin(), vocabularySortedChar->end(), ' '));
 
-    // Map characters according to distribution by group
+    // Map characters in vocabularySortedChar according to distribution by group
     unordered_map<char, char> vocabularyCharLabelMap;
-    for (int j=0; j<vocabularySortedChar->size(); j++) {
+     for (size_t j=0; j<vocabularySortedChar->size(); j++) 
+    {
         int currGroupInd = j / 2;
         vocabularyCharLabelMap.insert(pair<char, char>((*vocabularySortedChar)[j], char('a'+currGroupInd)));
     }
 
-    // Given labelMap, label vocabularies
+    // Given vocabularyCharLabelMap, label vocabularies
     vector<pair<string, string>> labeledVocabularies;
-    for (int j=0; j<vocabularies.size(); j++) {
+     for (size_t j=0; j<vocabularies.size(); j++) 
+    {
         string currLabeledVoc;
-        for (int k=0; k<vocabularies[j].length(); k++) {
+         for (size_t k=0; k<vocabularies[j].length(); k++) 
+        {
             currLabeledVoc += vocabularyCharLabelMap[vocabularies[j][k]];
         }
         labeledVocabularies.push_back(pair<string,string>(currLabeledVoc, vocabularies[j]));
     }
 
-    // Randomly select a character in ciphertext as space and calculate total distance from words
+    // Iteratively select a character in ciphertext as space and calculate total distance between decrypted words and best-match vocabularies
     string retDecryptText = "";
     int minDecryptDistance = -1;
-    for (int spaceInd=inputSortedChar->size()-1; spaceInd>inputSortedChar->size()-4; spaceInd--) {
+     for (size_t spaceInd=inputSortedChar->size()-1; spaceInd>inputSortedChar->size()-SPACECANDIDATERANGE-1; spaceInd--) 
+    {
         string currMapDecrypt = "";
         int currMapDistance = 0;
+        // Remove the selected character mapped to space in a copy of inputSortedChar
         vector<char> inputSortedCharCP = *inputSortedChar;
         char spaceMap = inputSortedCharCP[spaceInd];
         inputSortedCharCP.erase(inputSortedCharCP.begin()+spaceInd);
 
-        // Map characters according to distribution
+        // Map characters according to distribution in groups after removing space-mapped character
         unordered_map<char, char> inputLabelMap;
-        for (int j=0; j<inputSortedCharCP.size(); j++) {
+         for (size_t j=0; j<inputSortedCharCP.size(); j++) 
+        {
             int currGroupInd = j / 2;
             inputLabelMap.insert(pair<char, char>(inputSortedCharCP[j], char('a'+currGroupInd)));
         }
         inputLabelMap.insert(pair<char, char>(spaceMap , ' '));
-
-        for (auto& it : inputLabelMap) {
-            cout << it.first << '-' << it.second << " | ";
-        }
-        cout <<endl;
-        // Given inputLabelMap, decode ciphertext and find the LDistance decrypted text and corresponding plaintext 
+        
+        // Given inputLabelMap, decode characters in ciphertext
         char decryptedText [input.length()];
-        for (int j=0; j<input.length(); j++) {
+         for (size_t j=0; j<input.length(); j++) {
             decryptedText[j] = inputLabelMap[input[j]];
         }
         string decryptedTextStr = decryptedText;
-        cout << decryptedText << endl;
         
         // Split the decryptedText by space
         vector<string> tokenizedDecrypted;
         tokenize(decryptedTextStr, tokenizedDecrypted);
 
-        for (int i=0; i<tokenizedDecrypted.size(); i++) {
+        // Find the best-matching word in tokenizedDecrypted and record distance
+         for (size_t i=0; i<tokenizedDecrypted.size(); i++) 
+        {
             string currToken = tokenizedDecrypted[i];
-            if (currToken.length() < 5 && i < tokenizedDecrypted.size()-1) {
+            // If the tokenized decrypted word is too short, combine the next word to create a longer candidate
+            if (currToken.length() < SHORTESTVOCLEN && i < tokenizedDecrypted.size()-1) 
+            {
                 i++;
                 currToken += ' ' + tokenizedDecrypted[i];
             }
@@ -226,14 +210,16 @@ int main() {
             currMapDistance += predictionPair.second;
         }
         currMapDecrypt = currMapDecrypt.substr(0, currMapDecrypt.length()-1);
-        if (minDecryptDistance == -1 || currMapDistance < minDecryptDistance) {
+
+        // Compare the current total distance with shortest total distance
+        // Select the current decrypted text if the total distance is shorter than the previous best-matching text
+        if (minDecryptDistance == -1 || currMapDistance < minDecryptDistance) 
+        {
             minDecryptDistance = currMapDistance;
             retDecryptText = currMapDecrypt;
         }
-        cout << currMapDistance << endl;
     }
     
-    cout << "===========" << endl;
     cout << "My guess is:" <<endl;
     cout << retDecryptText << endl;
     ofstream myfile;
