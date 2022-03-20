@@ -51,5 +51,8 @@ if __name__=="__main__":
     )
     m = int(input("Enter which plaintext you would like to encrypt (1-5): "))
     p = float(input("Enter the prob of a random char (0-1): "))
-    with open('encrypted', 'w') as f:
-        f.write(encrypt(plaintexts[m-1], getKey(), p))
+    text = plaintexts[m-1]
+    print("Encrypting ", text)
+    print(encrypt(text, getKey(), p))
+    # with open('encrypted', 'w') as f:
+    #     f.write(encrypt(plaintexts[m-1], getKey(), p))
