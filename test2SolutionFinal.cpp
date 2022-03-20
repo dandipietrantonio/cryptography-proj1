@@ -223,8 +223,4 @@ int main(int argc, char *argv[])
     
     cout << "My guess is:" <<endl;
     cout << retDecryptText << endl;
-    ofstream myfile;
-    myfile.open ("test2_decrypted");
-    myfile << retDecryptText;
-    myfile.close();
 }
