@@ -122,7 +122,7 @@ To start with, we are not provided with plaintexts but provided with vocabularie
 
 Once we have our vocabularies symbol mapping, we create $v$ \emph{symbolized vocabularies}, that we can refer to later.
 
-For our encrypted input, we perform character distribution analysis and store a list of characters sorted by frequency. Since finding the spaces in plaintext is the essential in test 2 and that it is difficult to correctly find the spaces from input, we iteratively assign one of the characters as space. Then, in each iteration, we group and label characters according to frequency as in test 1 and get a \emph{symbolized input}. Then we tokenize the \emph{symobolized input} on spaces and get a list of symbolized tokens. For each symbolized token, we compare it with \emph{symbolized vocabularies} individually to find the best-matching vocabulary with least Levenshtein distance. We then record the total Levenshtein distance between symbolized tokens and its corresponding best-matching vocabularies and the sentence they created. After all iterations, the sentence with lowest Levenshtein distance is chosen as our output.
+For our encrypted input, we perform character distribution analysis and store a list of characters sorted by frequency. Since finding the spaces in plaintext is essential in test 2 and that it is difficult to correctly find the spaces from input, we iteratively assign one of the characters as space. Then, in each iteration, we group and label characters according to frequency as in test 1 and get a \emph{symbolized input}. Then we tokenize the \emph{symobolized input} on spaces and get a list of symbolized tokens. For each symbolized token, we compare it with \emph{symbolized vocabularies} individually to find the best-matching vocabulary with least Levenshtein distance. We then record the total Levenshtein distance between symbolized tokens and its corresponding best-matching vocabularies and the sentence they created. After all iterations, the sentence with lowest Levenshtein distance is chosen as our output.
 
 
 \section{Formal description of approach}
@@ -179,12 +179,81 @@ Note that we do not include the implementation of the LevenshteinDistance functi
     \State \textbf{Output} candidatePlaintexts[minCandPtxtIdx]
 \end{algorithmic}
 
+\subsection{Approach 2 - Test 2}
+Note that as above, we do not include the implementation of the LevenshteinDistance function.
+\begin{algorithmic}[1]
+\item[\textbf{Input:} encryptedInput]
+    \State /* Step 1: Store candidate vocabularies in aggregated sentence */
+    \State \emph{string} candidateVocab = [words in dictionary 2]
+    \item[]
+
+    \State /* Step 2: Get the character frequency distribution of candidateVocab */
+    \State \emph{hashmap} candidateVocabFreqDist = hashmap() 
+    \For{char $\in$ candidateVocab}
+        \State inputCharFreqMap[char]++
+    \EndFor
+    \item[]
+
+    \State /* Step 3: Grouping stage */
+    \State \emph{hashmap} candSymbolMap = hashmap()
+    \For{$(i=0; i < 26; i$++$)$}
+        \State\emph{int} curGroup = i / 2;
+        \State\emph{char} curGroupSymbol = `a`+curGroup
+        \State candSymbolMap[inCharsByFreq[i]] = curGroupSymbol
+    \EndFor
+    \item[]
+
+    \State /* Step 4: Create symbolized vocabulary */
+    \State \emph{hashmap} symbolizedWordsMap = hashmap()
+    \State \emph{string} symbolizedVocab = ""
+    \For {word $\in$ candidateVocab}
+        \State \emph{string} symbolizedWord = ""
+        \For {char $\in$ word}
+            \State symbolizedWord += candSymbolMap[char]
+        \EndFor
+        \State symbolizedVocab += symbolizedWord
+        \State symbolizedWordsMap[symbolizedWord] = word
+    \EndFor
+    \item[]
+
+    \State /* Step 5: Cet character frequency distribution of input */
+    \State \emph{hashmap} inputFreqDist = hashmap()
+    \For{char $\in$ encryptedInput}
+        \State inputFreqDist[char]++
+    \EndFor
+    \item[]
+
+    \State /* Step 6: Decrypt input to find combination of vocabularies */
+    \State \emph{string} curDecryptGuess = ""
+    \State \emph{int} minLDistance = $\infty$
+    \State \emph{string} minLDistanceText = ""
+    \For {curSpaceGuess $\in$ "abcd...xyz"}
+        \For {char $\in$ encryptedInput}
+            \State curDecryptGuess += candSymbolMap[char]
+        \EndFor
+        \State curDecryptGuess.removeAll(curSpaceGuess)
+        \For {word $\in$ symbolizedVocab}
+            \State \emph{int} ldist = LevenshteinDistance(word, encryptedInput)
+            \If {ldist $<$ minLDistance}
+                \State minLDistance = ldist
+                \State minLDistanceText = curDecryptGuess
+            \EndIf
+        \EndFor 
+    \EndFor
+    \item[]
+
+    \State /*Step 7: Output the best guess */
+    \State \textbf{Output} minLDistanceText
+\end{algorithmic}
+
+
+
 \section{Performance Analysis}
 This section analyze the performance of the approaches mentioned above.
 \subsection{Approach 1 - Test 1}
 To test on the performance, a script(testCorrectness.py) has been created to iteratively choosing the plaintext in dictionary\_1, encrypt the plaintext, run the executable of Approach 1, compare the result with chosen plaintext.
 \subsubsection{Plaintext Selection}
-The script iteratively choose a plaintext from dictionary_1.
+The script iteratively choose a plaintext from dictionary $1$.
 \subsubsection{Plaintext Encryption}
 The script encrypt the plaintext according to encryption scheme provided by handouts.
 \subsubsection{Execution}
@@ -193,12 +262,56 @@ The script runs the executable of Approach 1 and retrieve the results from stdou
 The script compare the result with chosen plaintext and record the number of errors.
 \subsubsection{Repetition}
 Repeat 4.1.1 to 4.1.5 for different randomness $p$. \\
+\subsubsection{Results}
+We ran the above experiment 75 times. The first five tests had probability 0, the next five probability 0.05, then 0.1, increasing in increments of 0.05 until we reached 0.75. The results are captured in the table below. Of the 75 tests, 5 failed, indicating an approximately $94\%$ success rate.
+
+\begin{center}
+\begin{tabular}{|c|c|c|} 
+ \hline
+ Randomness($p$) & Tests Run& Successful Guesses \\ [0.5ex] 
+ \hline\hline
+ 0.00 & 5 & 5 \\ 
+ \hline
+ 0.05 & 5 & 5 \\
+ \hline
+ 0.10 & 5 & 5 \\
+ \hline
+ 0.15 & 5 & 5 \\
+ \hline
+ 0.20 & 5 & 5 \\
+ \hline
+ 0.25 & 5 & 5 \\
+ \hline
+ 0.30 & 5 & 5 \\
+ \hline
+ 0.35 & 5 & 4 \\
+ \hline
+ 0.40 & 5 & 5 \\
+ \hline
+ 0.45 & 5 & 5 \\
+ \hline
+ 0.50 & 5 & 5 \\
+ \hline
+ 0.55 & 5 & 4 \\
+ \hline
+ 0.60 & 5 & 5 \\
+ \hline
+ 0.65 & 5 & 4 \\
+ \hline
+ 0.70 & 5 & 3 \\
+ \hline
+ 0.75 & 5 & 5 \\
+ \hline
+\end{tabular} \\
+    \vspace{0.15in}
+Table 1: Test 1 Performance
+\end{center}
 
 \subsection{Approach 2 - Test 2}
 Since no plaintext is provided for Test 2, the performance of Approach 2 is assessed by the accuracy in finding the chosen words from dictionary in correct sequence. To test on the performance, a script(test2Correctness.py) has been created to generate plaintext, encrypt the plaintext, execute Approach 2 executable, and calculate the Levenshtein distance with plaintext.
 
 \subsubsection{Plaintext Generation}
-The script repeatedly and randomly choose a word from dictionary_2, join into a sentence with space, until the length of the generated sentence is larger than $L$. Then, the script splits the plaintext on space to generate a list of words (plaintextWords).
+The script repeatedly and randomly choose a word from dictionary $2$, join into a sentence with space, until the length of the generated sentence is larger than $L$. Then, the script splits the plaintext on space to generate a list of words (plaintextWords).
 \subsubsection{Plaintext Encryption}
 The encryption process is similar to the process in Test 1. Encrypt the plaintext with randomness $p$.
 \subsubsection{Execution}
@@ -210,10 +323,13 @@ Repeat 4.2.2 to 4.2.4 for couple hundreds of times. Calculate the mean and minim
 \subsubsection{Repetition}
 Repeat 4.2.1 to 4.2.5 for different randomness $p$. \\
 
+\subsubsection{Results}
+The results of running the experiment can be seen in the table below.
+
 \begin{center}
 \begin{tabular}{|c|c|c|c|} 
  \hline
- Randomness($p$) & Average Distance in Words & Minimum Distance in Words & #Word \\ [0.5ex] 
+ Randomness($p$) & Average Distance in Words & Minimum Distance in Words & Num Words \\ [0.5ex] 
  \hline\hline
  0.00 & 10.66 & 6 & 53 \\ 
  \hline
@@ -228,7 +344,8 @@ Repeat 4.2.1 to 4.2.5 for different randomness $p$. \\
  0.25 & 37.48 & 15 & 53 \\
  \hline
 \end{tabular} \\
-\caption{Table 1: Test 2 Performance}
+    \vspace{0.15in}
+Table 2: Test 2 Performance
 \end{center}
 
 
